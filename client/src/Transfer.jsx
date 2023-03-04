@@ -2,23 +2,26 @@ import { useState } from "react";
 import server from "./server";
 
 function Transfer({ address, setBalance }) {
-  const [sendAmount, setSendAmount] = useState("");
+  const [amount, setAmount] = useState(0);
   const [recipient, setRecipient] = useState("");
+  const [signature, setSignature] = useState("");
 
   const setValue = (setter) => (evt) => setter(evt.target.value);
 
   async function transfer(evt) {
     evt.preventDefault();
 
+    const message = JSON.stringify({ recipient, amount });
     try {
-      const {
-        data: { balance },
-      } = await server.post(`send`, {
-        sender: address,
-        amount: parseInt(sendAmount),
-        recipient,
+      const { data } = await server.post(`send`, {
+        message,
+        signature,
       });
-      setBalance(balance);
+      if (data.error) {
+        alert(data.error);
+      } else {
+        setBalance(data.balance);
+      }
     } catch (ex) {
       alert(ex.response.data.message);
     }
@@ -31,18 +34,27 @@ function Transfer({ address, setBalance }) {
       <label>
         Send Amount
         <input
-          placeholder="1, 2, 3..."
-          value={sendAmount}
-          onChange={setValue(setSendAmount)}
+          placeholder="Enter the amount you want to transfer"
+          value={amount}
+          onChange={setValue(setAmount)}
         ></input>
       </label>
 
       <label>
-        Recipient
+        Recepient Address
         <input
-          placeholder="Type an address, for example: 0x2"
+          placeholder="Enter the recepient address"
           value={recipient}
           onChange={setValue(setRecipient)}
+        ></input>
+      </label>
+
+      <label>
+        Signed Transaction
+        <input
+          placeholder="Enter your signature for the transaction"
+          value={signature}
+          onChange={setValue(setSignature)}
         ></input>
       </label>
 
